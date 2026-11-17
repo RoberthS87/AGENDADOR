@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agendador de Servicios - R.S Seguridad Electrónica</title>
+    <style>
+        :root {
+            --primary-color: #0f172a;
+            --secondary-color: #1e293b;
+            --accent-color: #2563eb;
+            --whatsapp-color: #25d366;
+            --client-btn-color: #0284c7;
+            --bg-color: #f1f5f9;
+            --text-color: #334155;
+            --border-color: #cbd5e1;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 16px;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 650px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 28px;
+            border-radius: 14px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .header h1 { color: var(--primary-color); font-size: 1.5rem; font-weight: 800; }
+        .header p { color: #64748b; font-size: 0.9rem; margin-top: 4px; }
+
+        .quick-select-box {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            padding: 14px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .form-grid { display: grid; grid-template-columns: 1fr; gap: 18px; }
+        @media (min-width: 600px) { .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; } }
+
+        .form-group { display: flex; flex-direction: column; }
+        label { font-weight: 600; margin-bottom: 6px; font-size: 0.88rem; color: var(--secondary-color); }
+        label span.required { color: #ef4444; }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 11px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            color: var(--primary-color);
+            background-color: #ffffff;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+        }
+
+        .phone-input { display: flex; align-items: stretch; }
+        .prefix {
+            background: #e2e8f0;
+            padding: 0 14px;
+            border: 1px solid var(--border-color);
+            border-right: none;
+            border-radius: 8px 0 0 8px;
+            font-weight: 700;
+            color: #475569;
+            display: flex;
+            align-items: center;
+        }
+        .phone-input input { border-radius: 0 8px 8px 0; }
+
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 10px;
+            background: #f8fafc;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .checkbox-item { display: flex; align-items: center; gap: 8px; font-size: 0.88rem; cursor: pointer; }
+
+        .actions-section {
+            margin-top: 28px;
+            padding-top: 20px;
+            border-top: 2px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .actions-row { display: grid; grid-template-columns: 1fr; gap: 12px; }
+        @media (min-width: 540px) { .actions-row { grid-template-columns: 1fr 1fr; } }
+
+        button {
+            padding: 13px 18px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            color: #ffffff;
+            transition: filter 0.2s;
+        }
+        button:hover { filter: brightness(1.06); }
+
+        .btn-whatsapp-empresa { background-color: var(--whatsapp-color); }
+        .btn-jotform { background-color: var(--accent-color); }
+        .btn-whatsapp-cliente { background-color: var(--client-btn-color); width: 100%; }
+        .btn-clear { background-color: #64748b; font-size: 0.85rem; padding: 9px; }
+        .badge-info { font-size: 0.8rem; color: #64748b; text-align: center; margin-top: 6px; }
+        
+        #loadingText { font-size: 0.85rem; color: #166534; margin-top: 4px; font-style: italic; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>🔒 R.S SEGURIDAD ELECTRÓNICA</h1>
+        <p>Agendamiento de Servicios y Órdenes de Trabajo</p>
+    </div>
+
+    <!-- SELECCIÓN RÁPIDA DE CLIENTES -->
+    <div class="quick-select-box">
+        <div class="form-group" style="margin-bottom: 0;">
+            <label for="quickClientSelect" style="color: #166534;">⚡ Seleccionar cliente frecuente:</label>
+            <select id="quickClientSelect" onchange="cargarClienteFrecuente()">
+                <option value="">-- Cargando directorio de clientes... --</option>
+            </select>
+            <div id="loadingText">Cargando registros...</div>
+        </div>
+    </div>
+
+    <form id="agendadorForm">
+        <div class="form-grid">
+            
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label for="clientName">Nombre del Cliente / Empresa <span class="required">*</span></label>
+                    <input type="text" id="clientName" required placeholder="Ej. Alexander Cueva">
+                </div>
+
+                <div class="form-group">
+                    <label for="clientPhone">Celular de Contacto <span class="required">*</span></label>
+                    <div class="phone-input">
+                        <span class="prefix">+593</span>
+                        <input type="tel" id="clientPhone" required placeholder="969002042" maxlength="10">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label for="serviceType">Servicio Principal <span class="required">*</span></label>
+                    <select id="serviceType" required>
+                        <option value="">Seleccione el servicio...</option>
+                        <option value="Instalación de Cámaras CCTV">📹 Instalación de Cámaras CCTV</option>
+                        <option value="Mantenimiento Preventivo / Correctivo">🔧 Mantenimiento Preventivo / Correctivo</option>
+                        <option value="Inspección Técnica en Sitio">🔍 Inspección Técnica en Sitio</option>
+                        <option value="Control de Acceso y Biométricos">🚪 Control de Acceso / Biométricos</option>
+                        <option value="Alarmas Contra Robo e Incendio">🚨 Alarmas Contra Robo / Incendio</option>
+                        <option value="Cerco Eléctrico Perimetral">⚡ Cerco Eléctrico Perimetral</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="servicePriority">Modalidad / Urgencia</label>
+                    <select id="servicePriority">
+                        <option value="Agendamiento Normal">📅 Agendamiento Normal</option>
+                        <option value="Atención Prioritaria / Emergencia">🚨 Atención Prioritaria / Emergencia</option>
+                        <option value="Visita para Cotización">📋 Visita Previa para Cotización</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Sistemas o Equipos Involucrados</label>
+                <div class="checkbox-group">
+                    <label class="checkbox-item"><input type="checkbox" name="equipment" value="Cámaras IP / Domo"> Cámaras IP / Domo</label>
+                    <label class="checkbox-item"><input type="checkbox" name="equipment" value="Cámaras Analógicas HD"> Cámaras Analógicas HD</label>
+                    <label class="checkbox-item"><input type="checkbox" name="equipment" value="DVR / NVR + Disco Duro"> DVR / NVR + Almacenamiento</label>
+                    <label class="checkbox-item"><input type="checkbox" name="equipment" value="Panel de Alarma / Sensores"> Panel de Alarma / Sensores</label>
+                    <label class="checkbox-item"><input type="checkbox" name="equipment" value="Lector Biométrico / Cerradura"> Biométrico / Cerradura</label>
+                </div>
+            </div>
+
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label for="serviceDate">Fecha de la Cita <span class="required">*</span></label>
+                    <input type="date" id="serviceDate" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="serviceTime">Franja Horaria <span class="required">*</span></label>
+                    <select id="serviceTime" required>
+                        <option value="">Seleccione horario...</option>
+                        <option value="08:30 - 10:30 (Mañana temprano)">🌅 08:30 - 10:30 (Mañana)</option>
+                        <option value="10:30 - 12:30 (Media mañana)">☀️ 10:30 - 12:30 (Media mañana)</option>
+                        <option value="14:00 - 16:00 (Tarde)">🌤️ 14:00 - 16:00 (Tarde)</option>
+                        <option value="16:00 - 18:00 (Final de tarde)">🌇 16:00 - 18:00 (Final de tarde)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="serviceLocation">Dirección Exacta / Sector <span class="required">*</span></label>
+                <input type="text" id="serviceLocation" required placeholder="Ej. La Ferroviaria">
+            </div>
+
+            <div class="form-group">
+                <label for="serviceNotes">Observaciones Técnicas</label>
+                <textarea id="serviceNotes" rows="2" placeholder="Detalles de los equipos..."></textarea>
+            </div>
+
+        </div>
+
+        <div class="actions-section">
+            <div class="actions-row">
+                <button type="button" class="btn-whatsapp-empresa" onclick="enviarPedidoEmpresa()">
+                    📲 Enviar Solicitud a R.S Seguridad
+                </button>
+                <button type="button" class="btn-jotform" onclick="enviarJotform()">
+                    📋 Registrar en Jotform
+                </button>
+            </div>
+
+            <button type="button" class="btn-whatsapp-cliente" onclick="enviarMenuCliente()">
+                💬 Enviar Menú de Confirmación al Cliente (Opciones 1, 2, 3, 4)
+            </button>
+
+            <button type="button" class="btn-clear" onclick="limpiarFormularioManual()">
+                🗑️ Limpiar Campos
+            </button>
+            <p class="badge-info">Recordatorio automático programado: 2 horas antes de la visita técnica.</p>
+        </div>
+    </form>
+</div>
+
+<script>
+    const TELEFONO_EMPRESA = "593990911352"; 
+    const URL_BASE_JOTFORM = "https://form.jotform.com/TU_ID_DE_FORMULARIO";
+    
+    // ⚠️ ASEGÚRATE DE TENER TU URL DE APPS SCRIPT AQUÍ
+    const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbxW25cecrGLNN1tHQ70ZXOY7_ouEGfq0Ucu3fNq5cDzBbFCtIiox6rMQ8x1bYebeMJq/exec";
+
+    let listaClientesGlobal = [];
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('serviceDate').setAttribute('min', today);
+        cargarClientesDesdeSheets();
+    });
+
+    function cargarClientesDesdeSheets() {
+        const select = document.getElementById('quickClientSelect');
+        const loadingText = document.getElementById('loadingText');
+
+        fetch(URL_APPS_SCRIPT)
+            .then(response => response.json())
+            .then(data => {
+                listaClientesGlobal = data;
+                select.innerHTML = '<option value="">-- Seleccione un cliente (O ingrese datos nuevos) --</option>';
+                
+                data.forEach((cliente, index) => {
+                    let option = document.createElement('option');
+                    option.value = index;
+                    option.textContent = `${cliente.nombre} (${cliente.direccion})`;
+                    select.appendChild(option);
+                });
+                loadingText.style.display = 'none';
+            })
+            .catch(error => {
+                console.error("Error al cargar clientes:", error);
+                select.innerHTML = '<option value="">-- Ingrese datos del cliente --</option>';
+                loadingText.style.display = 'none';
+            });
+    }
+
+    function cargarClienteFrecuente() {
+        const index = document.getElementById('quickClientSelect').value;
+        if (index === "") return;
+
+        const cliente = listaClientesGlobal[index];
+        document.getElementById('clientName').value = cliente.nombre || '';
+        document.getElementById('serviceLocation').value = cliente.direccion || '';
+        
+        let cleanPhone = String(cliente.telefono || '').trim().replace(/\s+/g, '').replace(/^0+/, '');
+        document.getElementById('clientPhone').value = cleanPhone;
+    }
+
+    function obtenerDatosFormulario() {
+        const name = document.getElementById('clientName').value.trim();
+        const rawPhone = document.getElementById('clientPhone').value.trim().replace(/\s+/g, '').replace(/^0+/, '');
+        const service = document.getElementById('serviceType').value;
+        const priority = document.getElementById('servicePriority').value;
+        const date = document.getElementById('serviceDate').value;
+        const time = document.getElementById('serviceTime').value;
+        const location = document.getElementById('serviceLocation').value.trim();
+        const notes = document.getElementById('serviceNotes').value.trim();
+
+        const checkboxes = document.querySelectorAll('input[name="equipment"]:checked');
+        const selectedEquipments = Array.from(checkboxes).map(cb => cb.value);
+        const equipmentText = selectedEquipments.length > 0 ? selectedEquipments.join(', ') : 'A definir';
+
+        return {
+            nombre: name,
+            telefono: `0${rawPhone}`,
+            direccion: location,
+            service,
+            priority,
+            equipment: equipmentText,
+            date,
+            time,
+            notes: notes || 'Sin observaciones'
+        };
+    }
+
+    function validarCampos(data) {
+        if (!data.nombre || !data.telefono || !data.service || !data.date || !data.time || !data.direccion) {
+            alert('⚠️ Complete los campos obligatorios (*).');
+            return false;
+        }
+        return true;
+    }
+
+    function guardarEnSheets(data) {
+        const existe = listaClientesGlobal.some(c => c.nombre.toLowerCase() === data.nombre.toLowerCase());
+        if (!existe && URL_APPS_SCRIPT && !URL_APPS_SCRIPT.includes("PEGA_AQUÍ")) {
+            fetch(URL_APPS_SCRIPT, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nombre: data.nombre, direccion: data.direccion, telefono: data.telefono })
+            })
+            .then(() => {
+                // Recargar la lista en segundo plano para incluir al cliente recién guardado
+                setTimeout(cargarClientesDesdeSheets, 1500);
+            })
+            .catch(err => console.log(err));
+        }
+    }
+
+    // LIMPIEZA AUTOMÁTICA SIN PREGUNTAR AL ENVIAR
+    function resetearAutomaticamente() {
+        document.getElementById('agendadorForm').reset();
+        document.getElementById('quickClientSelect').selectedIndex = 0;
+    }
+
+    function enviarPedidoEmpresa() {
+        const data = obtenerDatosFormulario();
+        if (!validarCampos(data)) return;
+        guardarEnSheets(data);
+
+        const phoneClean = data.telefono.replace(/^0+/, '');
+        const mensaje = `*NUEVA SOLICITUD DE TRABAJO - R.S SEGURIDAD* 🔒%0A%0A` +
+                        `👤 *Cliente:* ${data.nombre}%0A` +
+                        `📞 *Contacto:* +593 ${phoneClean}%0A` +
+                        `🛠️ *Servicio:* ${data.service}%0A` +
+                        `⚡ *Modalidad:* ${data.priority}%0A` +
+                        `📦 *Equipos:* ${data.equipment}%0A` +
+                        `📅 *Fecha:* ${data.date} (${data.time})%0A` +
+                        `📍 *Dirección:* ${data.direccion}%0A` +
+                        `📝 *Detalles:* ${data.notes}%0A%0A` +
+                        `*Responda con el número de opción:*%0A` +
+                        `*1* - ✅ Confirmar cita%0A` +
+                        `*2* - 🔍 Inspección técnica%0A` +
+                        `*3* - 📅 Cambiar horario`;
+
+        window.open(`https://wa.me/${TELEFONO_EMPRESA}?text=${mensaje}`, '_blank');
+        resetearAutomaticamente();
+    }
+
+    function enviarMenuCliente() {
+        const data = obtenerDatosFormulario();
+        if (!validarCampos(data)) return;
+        guardarEnSheets(data);
+
+        const phoneClean = data.telefono.replace(/^0+/, '');
+        const mensaje = `Hola *${data.nombre}*, le saludamos de *R.S SEGURIDAD ELECTRÓNICA* 🔒.%0A%0A` +
+                        `Su orden (*${data.service}*) está programada para el *${data.date}* en el horario *${data.time}*.%0A` +
+                        `📍 *Lugar:* ${data.direccion}%0A%0A` +
+                        `Por favor, responda con el número de su opción:%0A` +
+                        `*1* - ✅ Confirmar visita técnica%0A` +
+                        `*2* - 🕒 Reprogramar fecha u hora%0A` +
+                        `*3* - 📋 Solicitar cotización detallada%0A` +
+                        `*4* - ❌ Cancelar solicitud`;
+
+        window.open(`https://wa.me/593${phoneClean}?text=${mensaje}`, '_blank');
+        resetearAutomaticamente();
+    }
+
+    function enviarJotform() {
+        const data = obtenerDatosFormulario();
+        if (!validarCampos(data)) return;
+        guardarEnSheets(data);
+
+        const params = new URLSearchParams({
+            nombreCliente: data.nombre,
+            telefono: data.telefono,
+            servicio: data.service,
+            modalidad: data.priority,
+            equipos: data.equipment,
+            fecha: data.date,
+            horario: data.time,
+            ubicacion: data.direccion,
+            detalles: data.notes
+        });
+
+        window.open(`${URL_BASE_JOTFORM}?${params.toString()}`, '_blank');
+        resetearAutomaticamente();
+    }
+
+    function limpiarFormularioManual() {
+        if (confirm('¿Desea limpiar todos los campos?')) {
+            resetearAutomaticamente();
+        }
+    }
+</script>
+
+</body>
+</html>
